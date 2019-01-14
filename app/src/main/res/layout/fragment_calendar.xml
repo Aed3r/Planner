@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/frameLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_gravity="center_horizontal"
+    tools:context=".Calendar">
+
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/reFAB"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginEnd="30dp"
+        android:layout_marginBottom="30dp"
+        android:clickable="true"
+        android:src="@mipmap/ic_clock_recurring"
+        android:tint="@color/colorPrimaryDark"
+        app:backgroundTint="#FFF"
+        app:fabSize="mini"
+        android:elevation="6dp"/>
+
+    <TextView
+        android:id="@+id/reText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:elevation="5dp"
+        android:fontFamily="@font/bebasneue_regular"
+        android:text="Recurring Event"
+        android:textSize="18sp"
+        android:visibility="invisible"
+        android:shadowColor="@color/colorAccent"
+        android:shadowDx="0"
+        android:shadowDy="0"
+        android:shadowRadius="10"/>
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/tdFAB"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginEnd="30dp"
+        android:layout_marginBottom="30dp"
+        android:clickable="true"
+        android:src="@mipmap/ic_todo"
+        android:tint="@color/colorPrimaryDark"
+        app:backgroundTint="#FFF"
+        app:fabSize="mini"
+        android:elevation="6dp"/>
+
+    <TextView
+        android:id="@+id/tdText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:elevation="5dp"
+        android:fontFamily="@font/bebasneue_regular"
+        android:text="To-Do"
+        android:textSize="18sp"
+        android:visibility="invisible"
+        android:shadowColor="@color/colorAccent"
+        android:shadowDx="0"
+        android:shadowDy="0"
+        android:shadowRadius="10"/>
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/oteFAB"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginEnd="30dp"
+        android:layout_marginBottom="30dp"
+        android:clickable="true"
+        android:src="@mipmap/ic_clock_full"
+        android:tint="@color/colorPrimaryDark"
+        app:backgroundTint="#FFF"
+        app:fabSize="mini"
+        android:elevation="5dp" />
+
+    <TextView
+        android:id="@+id/oteText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:elevation="5dp"
+        android:fontFamily="@font/bebasneue_regular"
+        android:text="Event"
+        android:textSize="18sp"
+        android:visibility="invisible"
+        android:shadowColor="@color/colorAccent"
+        android:shadowDx="0"
+        android:shadowDy="0"
+        android:shadowRadius="10"/>
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/floatingActionButton"
+        android:layout_width="99dp"
+        android:layout_height="82dp"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginEnd="20dp"
+        android:layout_marginBottom="20dp"
+        android:clickable="true"
+        android:elevation="6dp"
+        android:src="@android:drawable/ic_input_add"
+        android:tint="@color/colorAccent"
+        app:backgroundTint="#FFF"
+        app:fabSize="normal"
+        app:rippleColor="@color/colorAccent" />
+
+    <TimePicker
+        android:id="@+id/timePicker"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:amPmBackgroundColor="@color/design_default_color_primary"
+        android:amPmTextColor="@color/colorPrimaryDark"
+        android:headerBackground="@color/colorPrimary"
+        android:visibility="invisible" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:orientation="vertical">
+
+        <com.prolificinteractive.materialcalendarview.MaterialCalendarView
+
+            android:id="@+id/calendarView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="0dp"
+            android:layout_marginTop="0dp"
+            android:layout_marginEnd="0dp"
+            android:elevation="2dp"
+            app:mcv_dateTextAppearance="@style/date"
+            app:mcv_selectionColor="@color/colorAccent"
+            app:mcv_showOtherDates="all"
+            app:mcv_weekDayTextAppearance="@style/weekName" />
+
+        <TextView
+            android:id="@+id/textView4"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#FFF"
+            android:elevation="4dp"
+            android:fontFamily="@font/bebasneue_bold"
+            android:textAlignment="center"
+            android:textColor="#000"
+            android:textSize="36sp" />
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/recyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="0dp"
+            android:layout_marginTop="0dp"
+            android:layout_marginEnd="0dp"
+            android:elevation="2dp" />
+    </LinearLayout>
+
+</RelativeLayout>

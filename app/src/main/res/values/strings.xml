@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">Planner</string>
+    <string name="title_calendar">Calendar</string>
+    <string name="title_activity">Activity</string>
+    <string name="title_stats">Stats</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="textview">TextView</string>
+</resources>
