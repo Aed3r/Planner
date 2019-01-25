@@ -9,33 +9,39 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.animation.FastOutLinearInInterpolator;
 import android.support.v4.view.animation.FastOutSlowInInterpolator;
 import android.support.v4.view.animation.LinearOutSlowInInterpolator;
-import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.DisplayMetrics;
-import android.util.EventLog;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 
-import android.widget.LinearLayout;
+import android.view.ViewTreeObserver;
 import android.widget.TextView;
-import android.widget.TimePicker;
 
+import com.google.gson.Gson;
 import com.prolificinteractive.materialcalendarview.CalendarDay;
 import com.prolificinteractive.materialcalendarview.MaterialCalendarView;
 import com.prolificinteractive.materialcalendarview.OnDateSelectedListener;
 
 import org.threeten.bp.LocalDate;
 
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+
+import com.planner.aeder.planner.schedulesClasses.Schedule;
 
 
 /**
@@ -58,13 +64,13 @@ public class Calendar extends Fragment {
     private ObjectAnimator OTEtextAnimator;
     private ObjectAnimator TDtextAnimator;
     private ObjectAnimator REtextAnimator;
-    private ObjectAnimator timePickerAnimator;
     private ValueAnimator recyclerViewAnimator;
     private int maxCalendarHeight;
     private int minCalendarHeight = 300;
     private int scrollState = 1; //1: calendar expanded, 0: recycler view expanded
     private int FABState = 0; //1: expanded, 0: not expanded
     private int distance;
+    private Fragment fragment;
 
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -116,21 +122,11 @@ public class Calendar extends Fragment {
         //region scrolling and some calenderView set up
         final MaterialCalendarView calendarView = view.findViewById(R.id.calendarView);
         final TextView textView = view.findViewById(R.id.textView4);
-        final TimePicker timePicker = view.findViewById(R.id.timePicker);
-
-        timePicker.setIs24HourView(true);
+        final TextView noSchedulesText =view.findViewById(R.id.noSchedulesTXT);
 
         calendarView.setTopbarVisible(false);
         calendarView.setSelectedDate(LocalDate.now());
         setHeader(textView, calendarView);
-
-        calendarView.setOnDateChangedListener(new OnDateSelectedListener() {
-            @SuppressLint("SetTextI18n")
-            @Override
-            public void onDateSelected(@NonNull MaterialCalendarView materialCalendarView, @NonNull CalendarDay calendarDay, boolean b) {
-                setHeader(textView, calendarView);
-            }
-        });
 
         View.OnTouchListener textTouchHandler = new View.OnTouchListener() {
             @Override
@@ -149,6 +145,8 @@ public class Calendar extends Fragment {
                             maxCalendarHeight = calendarLayoutParams.height;
                             calendarView.setLayoutParams(calendarLayoutParams);
                         }
+                        noSchedulesText.setX(mRecyclerView.getMeasuredWidth()/2-noSchedulesText.getMeasuredWidth()/2);
+                        noSchedulesText.setY(mRecyclerView.getY()+30);
                         break;
                     case MotionEvent.ACTION_UP:
                         calendarLayoutParams = calendarView.getLayoutParams();
@@ -156,7 +154,7 @@ public class Calendar extends Fragment {
                         if(scrollState == 1){ //Calendar expanded
                             distance = minCalendarHeight;
                             scrollState = 0;
-                        } else if(scrollState == 0){ //Recyclerview expanded
+                        } else if(scrollState == 0){ //Recycler view expanded
                             distance = maxCalendarHeight;
                             scrollState = 1;
                         }
@@ -169,6 +167,8 @@ public class Calendar extends Fragment {
                                 ViewGroup.LayoutParams calendarLayoutParams = calendarView.getLayoutParams();
                                 calendarLayoutParams.height = val;
                                 calendarView.setLayoutParams(calendarLayoutParams);
+                                noSchedulesText.setX(mRecyclerView.getMeasuredWidth()/2-noSchedulesText.getMeasuredWidth()/2);
+                                noSchedulesText.setY(mRecyclerView.getY()+30);
                             }
                         });
                         scrollAnimator.setDuration(250);
@@ -184,29 +184,39 @@ public class Calendar extends Fragment {
 
         //region recyclerView set up
         mRecyclerView = view.findViewById(R.id.recyclerView);
-        mRecyclerView.setHasFixedSize(true);
+
+        mRecyclerView.getRecycledViewPool().setMaxRecycledViews(0, 0);
 
         //mLayoutManager = new CustomLayoutManager(this.getActivity(), LinearLayoutManager.VERTICAL, false, mRecyclerView.getWidth(), -200);
         mLayoutManager = new LinearLayoutManager(this.getActivity());
         mRecyclerView.setLayoutManager(mLayoutManager);
 
-        List<schedule> itemList = new ArrayList<>();
-        itemList.add(new schedule(0, "Sample", "this is an example text"));
-        itemList.add(new schedule(1, 6, "Sample"));
-        itemList.add(new schedule(2, "Sample"));
-        itemList.add(new schedule(3, 23, "Sample", "this is an example text"));
-        itemList.add(new schedule(4, "Sample"));
-        itemList.add(new schedule(5, 12, "Sample"));
-        itemList.add(new schedule(6, "Sample", "this is an example text"));
-        itemList.add(new schedule(7, 22, "Sample"));
-        itemList.add(new schedule(8, "Sample"));
-        itemList.add(new schedule(9, 45, "Sample", "this is an example text"));
-        itemList.add(new schedule(10, "Sample"));
-        itemList.add(new schedule(11, 55, "Sample"));
-        itemList.add(new schedule(12, "Sample", "this is an example text"));
+        final List<Schedule> itemList = getItems(calendarView.getSelectedDate().getYear(), calendarView.getSelectedDate().getMonth(), calendarView.getSelectedDate().getDay(), noSchedulesText);
 
-        mAdapter = new RecyclerViewAdapter(itemList, this.getActivity());
+        final RecyclerViewAdapter mAdapter = new RecyclerViewAdapter(itemList, this.getActivity());
         mRecyclerView.setAdapter(mAdapter);
+
+        view.getViewTreeObserver().addOnGlobalLayoutListener( //Waits for the LinearLayout to complete a layout pass to get the Y pos of the Recycler View
+                new ViewTreeObserver.OnGlobalLayoutListener() {
+                    @Override
+                    public void onGlobalLayout() {
+                        noSchedulesText.setX(mRecyclerView.getMeasuredWidth()/2-noSchedulesText.getMeasuredWidth()/2);
+                        noSchedulesText.setY(mRecyclerView.getY()+50);
+
+                        view.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                    }
+                });
+
+        calendarView.setOnDateChangedListener(new OnDateSelectedListener() {
+            @SuppressLint("SetTextI18n")
+            @Override
+            public void onDateSelected(@NonNull MaterialCalendarView materialCalendarView, @NonNull CalendarDay calendarDay, boolean b) {
+                setHeader(textView, calendarView);
+                itemList.clear();
+                itemList.addAll(0, getItems(calendarView.getSelectedDate().getYear(), calendarView.getSelectedDate().getMonth(), calendarView.getSelectedDate().getDay(), noSchedulesText));
+                mAdapter.notifyDataSetChanged();
+            }
+        });
         //endregion
 
         //region FAB action
@@ -363,7 +373,13 @@ public class Calendar extends Fragment {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 if(event.getAction() == MotionEvent.ACTION_UP){
-
+                    fragment = new oteSetupFragment();
+                    Bundle bundle = new Bundle();
+                    bundle.putInt("year", calendarView.getSelectedDate().getYear());
+                    bundle.putInt("month", calendarView.getSelectedDate().getMonth());
+                    bundle.putInt("day", calendarView.getSelectedDate().getDay());
+                    fragment.setArguments(bundle);
+                    loadFragment(fragment);
                 }
                 return false;
             }
@@ -398,67 +414,40 @@ public class Calendar extends Fragment {
         return view;
     }
 
+    private List<Schedule> getItems(int year, int month, int day, TextView noSchedulesText){
+        try{
+            noSchedulesText.setVisibility(View.INVISIBLE);
+            return(new Gson().fromJson(readFile(this.getActivity().getFilesDir().toString() + "/" + String.valueOf(year) + "." + String.valueOf(month) + "." + String.valueOf(day) + ".txt", StandardCharsets.UTF_8), schedulesClasses.CalendarDay.class).getSchedules());
+        }catch(Exception e){
+            noSchedulesText.setVisibility(View.VISIBLE);
+            return new ArrayList<Schedule>();
+        }
+    }
+
+    @NonNull
+    static String readFile(String path, Charset encoding) throws IOException
+    {
+        byte[] encoded = Files.readAllBytes(Paths.get(path));
+        return new String(encoded, encoding);
+    }
+
+    private void loadFragment(Fragment fragment){
+        FragmentTransaction fragmentTransaction = getFragmentManager().beginTransaction();
+        fragmentTransaction.replace(R.id.floatingFrameContainer, fragment);
+        fragmentTransaction.addToBackStack(null);
+        fragmentTransaction.commit();
+    }
+
+
     public void setHeader(TextView textView, MaterialCalendarView calendarView){
         textView.setText(new SimpleDateFormat("MMMM").format(new Date(0, calendarView.getSelectedDate().getMonth(), 0)) + " " + String.valueOf(calendarView.getSelectedDate().getDay()) + " " + String.valueOf(calendarView.getSelectedDate().getYear()));
     }
 
-    public void loadTimePicker(final MaterialCalendarView calendarView, final TextView textView, final TimePicker timePicker, final RecyclerView recyclerView){
-        scrollAnimator = ValueAnimator.ofInt(calendarView.getMeasuredHeight(), 0);
-        scrollAnimator.setInterpolator(new FastOutLinearInInterpolator());
-        scrollAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-            @Override
-            public void onAnimationUpdate(ValueAnimator animation) {
-                int val = (Integer) scrollAnimator.getAnimatedValue();
-                ViewGroup.LayoutParams calendarLayoutParams = calendarView.getLayoutParams();
-                calendarLayoutParams.height = val;
-                calendarView.setLayoutParams(calendarLayoutParams);
-            }
-        });
-        scrollAnimator.setDuration(200);
-        scrollAnimator.start();
-
-
-        recyclerViewAnimator = ValueAnimator.ofInt(0, pxToDp(recyclerView.getMeasuredHeight()));
-        recyclerViewAnimator.setInterpolator(new FastOutLinearInInterpolator());
-        recyclerViewAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-            @Override
-            public void onAnimationUpdate(ValueAnimator animation) {
-                int val = (Integer) scrollAnimator.getAnimatedValue();
-                LinearLayout.LayoutParams recyclerParams = (LinearLayout) recyclerView.getLayoutParams();
-                recyclerParams.
-            }
-        });
-
-
-
-        timePicker.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                timePicker.setY(textView.getY() - timePicker.getMeasuredHeight());
-            }
-        }, 200);
-        timePicker.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                timePickerAnimator = ObjectAnimator.ofFloat(timePicker, "translationY", textView.getMeasuredHeight());
-                timePickerAnimator.setInterpolator(new LinearOutSlowInInterpolator());
-                timePickerAnimator.setDuration(250);
-                timePickerAnimator.start();
-            }
-        }, 201);
-    }
-
-    public int pxToDp(int px) {
-        DisplayMetrics displayMetrics = getContext().getResources().getDisplayMetrics();
-        int dp = Math.round(px / (displayMetrics.xdpi / DisplayMetrics.DENSITY_DEFAULT));
-        return dp;
-    }
-
     public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapter.CustomViewHolder> {
-        private List<schedule> itemList;
+        private List<Schedule> itemList;
         private Context context;
 
-        public RecyclerViewAdapter(List<schedule> itemList, Context context) {
+        public RecyclerViewAdapter(List<Schedule> itemList, Context context) {
             this.itemList = itemList;
             this.context = context;
         }
@@ -472,7 +461,7 @@ public class Calendar extends Fragment {
 
         @Override
         public void onBindViewHolder(CustomViewHolder customViewHolder, int i) {
-            schedule item = itemList.get(i);
+            Schedule item = itemList.get(i);
             String title;
             if(String.valueOf(item.getHour()).length() == 1){
                 title = "0" + String.valueOf(item.getHour());
@@ -505,68 +494,6 @@ public class Calendar extends Fragment {
                 this.text = (TextView) itemView.findViewById(R.id.cardViewText);
             }
         }
-    }
-    public class calendarDay {
-        private int year;
-        private int month;
-        private int day;
-        private List<schedule> schedules = new ArrayList<>();
-
-        public calendarDay(int year, int month, int day, schedule schedule) {
-            this.year = year;
-            this.month = month;
-            this.day = day;
-            this.schedules.add(schedule);
-        }
-
-        public void addSchedule(schedule schedule) {
-            this.schedules.add(schedule);
-        }
-
-        public List<schedule> getSchedules(){ return schedules; }
-        public int getYear() { return year; }
-        public int getMonth() { return month; }
-        public int getDay() { return day; }
-
-    }
-    public class schedule{
-        private int hour;
-        private int minute;
-        private String title;
-        private String text;
-
-        public schedule(int hour, int minute, String title, String text){
-            this.hour = hour;
-            this.minute = minute;
-            this.title = title;
-            this.text = text;
-        }
-
-        public schedule(int hour, String title, String text){
-            this.hour = hour;
-            this.minute = 0;
-            this.title = title;
-            this.text = text;
-        }
-
-        public schedule(int hour, int minute, String title){
-            this.hour = hour;
-            this.minute = minute;
-            this.title = title;
-            this.text = "";
-        }
-
-        public schedule(int hour, String title){
-            this.hour = hour;
-            this.minute = 0;
-            this.title = title;
-            this.text = "";
-        }
-
-        public String getTitle() { return title; }
-        public String getText() { return text; }
-        public int getMinute() { return minute; }
-        public int getHour() { return hour; }
     }
 
 

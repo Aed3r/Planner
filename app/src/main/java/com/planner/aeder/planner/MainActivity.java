@@ -15,10 +15,7 @@ import com.planner.aeder.planner.Activity;
 import com.planner.aeder.planner.Stats;
 
 
-public class MainActivity extends AppCompatActivity
-    implements Calendar.OnFragmentInteractionListener,
-                Activity.OnFragmentInteractionListener,
-                Stats.OnFragmentInteractionListener {
+public class MainActivity extends AppCompatActivity implements Calendar.OnFragmentInteractionListener, Activity.OnFragmentInteractionListener, Stats.OnFragmentInteractionListener, oteSetupFragment.OnFragmentInteractionListener {
 
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
@@ -60,7 +57,7 @@ public class MainActivity extends AppCompatActivity
      *
      * @param fragment
      */
-    private void loadFragment(Fragment fragment) {
+    public void loadFragment(Fragment fragment) {
         // load fragment
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
         transaction.replace(R.id.frameContainer, fragment);

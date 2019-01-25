@@ -112,13 +112,18 @@
         app:fabSize="normal"
         app:rippleColor="@color/colorAccent" />
 
-    <TimePicker
-        android:id="@+id/timePicker"
+    <TextView
+        android:id="@+id/noSchedulesTXT"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:amPmBackgroundColor="@color/design_default_color_primary"
-        android:amPmTextColor="@color/colorPrimaryDark"
-        android:headerBackground="@color/colorPrimary"
+        android:elevation="4dp"
+        android:fontFamily="@font/bebasneue_light"
+        android:shadowColor="@color/design_default_color_primary_dark"
+        android:shadowDx="0"
+        android:shadowDy="0"
+        android:shadowRadius="5"
+        android:text="No schedules yet!"
+        android:textSize="16sp"
         android:visibility="invisible" />
 
     <LinearLayout
@@ -156,7 +161,7 @@
         <android.support.v7.widget.RecyclerView
             android:id="@+id/recyclerView"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:layout_marginStart="0dp"
             android:layout_marginTop="0dp"
             android:layout_marginEnd="0dp"
